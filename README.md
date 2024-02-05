@@ -1,0 +1,1 @@
+This repository contains code that creates a knotted 4-regular graph, by iteratively building up its Gauss code. Additional nodes are produced by splicing together two (not necessarily distinct) edges bordering the same face of the graph, such that the edge orientations have the same rotation around the common face.
