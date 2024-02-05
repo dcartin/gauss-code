@@ -55,8 +55,8 @@ class Symbol:
         
         if self.label > 0:
             return repr(self.label) + '+'
-        else:
-            return repr(-self.label) + '-'
+        
+        return repr(-self.label) + '-'
         
     def linkSymbols(self, other):
         """
@@ -127,36 +127,15 @@ class Edge:
             Enable ordering of the edges, based on their label.
         """
         
-        if self.edge_num < other.edge_num:
-            return True
-        else:
-            return False
-        
-    def first(self):
-        return self.first
-
-    def last(self):
-        return self.last
-    
-    def face_left(self):
-        return self.face_left
-    
-    def face_right(self):
-        return self.face_right
-    
-    def prev(self):
-        return self.prev
-    
-    def next(self):
-        return self.next
+        return self.edge_num < other.edge_num
 
 #-----------------------------------------------------------------------------#
     
 class Graph:
     
     def __init__(self):
+        
         self.head = None
-        self.tail = None
         
         # These numbers should always be related by the Euler characteristic,
         # so that V - E + F = 2
@@ -189,39 +168,23 @@ class Graph:
         symbol_list = []
         
         # See if there are any edges in the graph; if so, print them out as
-        # ordered pairs. The edge represented by self.tail (from the end of the
-        # Gauss code to the beginning) is done separately.
+        # ordered pairs.
         
         try:
             current = self.head.next
+            
             while current.next:
                 symbol_list.append(repr(current.first))
-                # symbol_list.append('{:3d}'.format(repr(current.first)))
+                second_symb = repr(current.last)
+                
                 current = current.next
+                
+            symbol_list.append(second_symb)
             
         except:
             return 'null'
             
         return ''.join(symbol_list)
-        
-    def find(self, symbol):
-        current = self.head
-        while current and current.first != symbol:
-            current = current.next
-        return current
-    
-    def incrNumNodes(self):
-        self.num_nodes += 1
-        self.num_faces += 1
-        
-    def numNodes(self):
-        return self.num_nodes
-        
-    def numEdges(self):
-        return self.num_edges
-    
-    def numFaces(self):
-        return self.num_faces
     
     def initEdges(self):
         """
@@ -240,14 +203,12 @@ class Graph:
         edge_1 = Edge(first = a_pos, last = a_neg, face_left = 1, face_right = 2, \
                       edge_num = 0)
         edge_2 = Edge(first = a_neg, last = a_pos, face_left = 3, face_right = 1, \
-                      prev = edge_1, edge_num = 1)
+                      prev = edge_1, next = None, edge_num = 1)
                       
-        self.head = Edge(last = a_pos, next = edge_1, edge_num = -1)
-        self.tail = Edge(first = a_neg, prev = edge_2, edge_num = -2)
+        self.head = Edge(last = a_pos, prev = None, next = edge_1, edge_num = -1)
         
         edge_1.prev = self.head
         edge_1.next = edge_2
-        edge_2.next = self.tail
     
         # Initialize number of nodes, edges
         
@@ -269,8 +230,6 @@ class Graph:
         self.face_edge_dict[1] = [edge_1, edge_2]
         self.face_edge_dict[2] = [edge_1]
         self.face_edge_dict[3] = [edge_2]
-        
-        return
     
     def insertSelfLoop(self, edge_first = None, face_num = None):
         """
@@ -300,8 +259,9 @@ class Graph:
             
         edge_last = Edge(last = last, face_left = face_left, face_right = face_right, \
                          next = next, edge_num = self.num_edges)
-            
-        next.prev = edge_last
+        
+        if next:            # If an edge exists in linked list after edge_first
+            next.prev = edge_last
         
         for face in [face_left, -face_right]:
             self.face_dict[face] = self.face_dict.get(face, []) + [edge_last]
@@ -378,8 +338,6 @@ class Graph:
         
         self.num_edges += 2
         
-        return
-        
     def insertSymbol(self, edge_left = None, edge_right = None, face_num = None):
         
         # Increment number of nodes and faces here, since node and face numbers
@@ -411,7 +369,9 @@ class Graph:
         # originally after edge_left
             
         edge_left.next = edge_begin
-        next_left.prev = edge_begin
+        
+        if next_left:   # If edge_left has an edge following it in linked list
+            next_left.prev = edge_begin
         
         # Create new edge for "second half" of edge_right
 
@@ -559,7 +519,7 @@ class Graph:
         # Create entry in face_edge_dict for new face, update adjacent faces for
         # affected edges in cut_seq
         
-        self.face_edge_dict[self.num_faces] = [edge for edge in cut_seq]
+        self.face_edge_dict[self.num_faces] = cut_seq
         
         for edge in cut_seq:
             if edge.face_left == face_num:
@@ -580,7 +540,7 @@ class Graph:
                 edge.face_right = self.num_faces
                 
                 self.face_dict[-self.num_faces] = self.face_dict.get(-self.num_faces, []) + [edge]
-                self.edge_num_dict[-self.num_faces] = self.edge_num_dict.get(-self.num_faces, 0) + 1   
+                self.edge_num_dict[-self.num_faces] = self.edge_num_dict.get(-self.num_faces, 0) + 1
            
         # Reverse all edges between edge_left and edge_right
         
@@ -588,7 +548,8 @@ class Graph:
                       right = edge_right)
             
         # Clean up any entries in dictionaries with no elements; sort lists
-        # with non-zero lengths
+        # with non-zero lengths. NOTE: A seperate list key_list is used here,
+        # since entries may be deleted from edge_num_dict.keys
         
         key_list = [key for key in self.edge_num_dict.keys()]
         
@@ -604,73 +565,6 @@ class Graph:
         self.num_edges += 2
         
         return [edge_left, edge_begin, edge_end, edge_right]
-    
-    def append(self, first = None, last = None, face_left = None, \
-                 face_right = None):
-        
-        # If no edges in graph, add edge as first; put edge in face dictionary
-        # for each face it is adjacent to
-        
-        if not self.head:
-            
-            print('add first edge')
-    
-            self.head = Edge(last = last, edge_num = -1)
-            self.tail = Edge(first = first, edge_num = -2)
-            
-            new_edge = Edge(first = first, last = last, face_left = face_left, \
-                             face_right = face_right, prev = self.head, \
-                             next = self.tail, edge_num = 0)
-                
-            self.head.next = new_edge
-            self.tail.prev = new_edge
-            
-            self.num_edges += 1
-            
-            # Use sign of key to indicate CW (+) or CCW (-) rotation about face
-                
-            if face_left:
-                self.face_dict[face_left] = self.face_dict.get(face_left, []) + [new_edge]
-                self.edge_num_dict[face_left] = self.edge_num_dict.get(face_left, 0) + 1
-    
-            if face_right:
-                self.face_dict[-face_right] = self.face_dict.get(-face_right, []) + [new_edge]
-                self.edge_num_dict[-face_right] = self.edge_num_dict.get(-face_right, 0) + 1
-                
-            return new_edge
-        
-        # With preexisting edges, find edge previous to self.tail to add onto
-        
-        prev_node = self.tail.prev
-            
-        # Make sure the symbol at the end of the list matches the first in the
-        # new edge
-            
-        if prev_node.last != first:
-            return
-        
-        # Create new edge, and change self.tail information appropriately
-        
-        new_edge = Edge(first = first, last = last, face_left = face_left, \
-                         face_right = face_right, prev = prev_node, next = self.tail, \
-                         edge_num = self.num_edges)
-            
-        self.num_edges += 1
-            
-        prev_node.next = new_edge
-        
-        self.tail.first = last
-        self.tail.prev = new_edge
-        
-        # Add new edge to face dictionary
-        
-        self.face_dict[face_left] = self.face_dict.get(face_left, []) + [new_edge]
-        self.edge_num_dict[face_left] = self.edge_num_dict.get(face_left, 0) + 1
-        
-        self.face_dict[-face_right] = self.face_dict.get(-face_right, []) + [new_edge]
-        self.edge_num_dict[-face_right] = self.edge_num_dict.get(-face_right, 0) + 1
-            
-        return new_edge
         
     def reverse(self, left = None, begin = None, end = None, right = None):
         """
@@ -685,6 +579,20 @@ class Graph:
         
         if left.next != begin or end.next != right:
             return False
+        
+        # See which edge comes first in linked list; if left comes before right,
+        # flip order, so that reverse does not hit either end of linked list
+        
+        current = self.head.next
+        while current != None:
+            if current == left:
+                break
+            
+            if current == right:
+                left, begin, end, right = end, right, left, begin      
+                break
+            
+            current = current.next
         
         # Shift ends of sequence in linked list
         
@@ -718,8 +626,9 @@ class Graph:
         # Go through all edges between begin and end
         
         while current != end:
-            prev_node = current.prev
             
+            prev_node = current.prev
+           
             # Change placement of edge in face_dict
             
             for face in [current.face_left, -current.face_right]:
@@ -747,12 +656,12 @@ class Graph:
             
             # If the end of the linked list is reached, continue at beginning
             
-            if current == self.tail:
+            if current == None:
                 current = self.head.next
         
         # Reverse end, but do not change sign for either symbol of the edge; these
         # should already be defined correctly from the step creating the new edges
-            
+        
         end.prev = left
         end.next = prev_node.prev
         
@@ -769,27 +678,33 @@ class Graph:
     def faceDict(self, face = None):
         if face:
             return repr(face) + ': ' + '[' + ', '.join([repr(edge) for edge in self.face_dict[face]]) + ']'
-        else:
-            return [repr(face) + ': ' + '[' + ', '.join([repr(edge) for edge in self.face_dict[face]]) + ']' \
-                for face in sorted(self.face_dict.keys())]
+
+        return [repr(face) + ': ' + '[' + ', '.join([repr(edge) for edge in self.face_dict[face]]) + ']' \
+            for face in sorted(self.face_dict.keys())]
                 
     def faceEdgeDict(self, face = None):
+        
+        # If a specific face is asked for, return only the edges bordering that face
+        
         if face:
             return repr(face) + ': ' + '[' + ', '.join([repr(edge) for edge in self.face_edge_dict[face]]) + ']'
-        else:
-            return [repr(face) + ': ' + '[' + ', '.join([repr(edge) for edge in self.face_edge_dict[face]]) + ']' \
-                for face in sorted(self.face_edge_dict.keys())]
+
+        # For generic case, return all edges bordering all faces
+
+        return [repr(face) + ': ' + '[' + ', '.join([repr(edge) for edge in self.face_edge_dict[face]]) + ']' \
+            for face in sorted(self.face_edge_dict.keys())]
                 
     def edgeNumDict(self, face = None):
         if face:
             return self.edge_num_dict.get(face, 0)
-        else:
-            return [item for item in self.edge_num_dict.items()]
+
+        return list(self.edge_num_dict.items())
         
     def edgeList(self):
         edge_list = []
         current = self.head.next
-        while current != self.tail:
+            
+        while current != None:
             edge_list += [repr(current)]
             current = current.next
             
@@ -797,8 +712,9 @@ class Graph:
     
     def edgeEnds(self):
         current = self.head.next
-        while current != self.tail:
-            yield '(' + repr(current.first) + ', ' + repr(current.last) + ')'
+        
+        while current != None:
+            yield repr(current.edge_num) + ': (' + repr(current.first) + ', ' + repr(current.last) + ')'
             current = current.next
         
     def numPairs(self, face = None):
@@ -814,8 +730,8 @@ class Graph:
         if face:
             edge_num = self.edge_num_dict.get(face, 0)
             return edge_num * (edge_num + 1) // 2
-        else:
-            return sum([iii * (iii + 1) // 2 for iii in self.edge_num_dict.values()])
+        
+        return sum([iii * (iii + 1) // 2 for iii in self.edge_num_dict.values()])
         
     def getEdgePair(self):
         """
@@ -865,9 +781,7 @@ class Graph:
 G = Graph()
 G.initEdges()
 
-numNodes = 6
-
-print('N = 1: ', G)
+numNodes = 50
 
 # Add additional nodes
 
@@ -881,4 +795,4 @@ for iii in range(2, numNodes + 1):
     else:
         G.insertSymbol(edge_left = edge1, edge_right = edge2, face_num = face)
     
-    print('N =', iii, ':', G)
+print('Gauss code:', G)
