@@ -773,15 +773,68 @@ class Graph:
         for face in self.edge_num_dict.keys():
             for pair in combinations_with_replacement(self.face_dict[face], 2):
                 yield (pair[0], pair[1], face)
+                
+    def GaussToDT(self, f_list = False):
+        """
+            Converts the Gauss code into a DT sequence, as a list of node labels
+            in the first entry of a list. If f_list is True, then the orientation
+            information in the function f is returned as the second entry in the
+            list. The resulting DT sequence is not guaranteed to be the
+            lexicographically lowest form, so it is not necessarily in standard
+            form.
+        """
+        
+        DT_seq = [[] for iii in range(self.num_nodes)]
+        f_list = [0 for iii in range(2 * self.num_nodes)]
+        label = 0
+        
+        # Go through each edge, and convert Gauss code label to DT label
+        
+        current = self.head.next
+        
+        while current.next:
+            second_symb = current.last
+            
+            if current.first.label > 0:
+                DT_seq[current.first.label - 1] += [label]
+                f_list[label] = +1
+            else:
+                DT_seq[-current.first.label - 1] += [label]
+                f_list[label] = -1
+                
+            label += 1
+            current = current.next
+            
+        if second_symb.label > 0:
+            DT_seq[second_symb.label - 1] += [label]
+            f_list[label] = +1
+        else:
+            DT_seq[-second_symb.label - 1] += [label]
+            f_list[label] = -1
+            
+        # Sort each entry in DT_seq so that even number is first, then sort by
+        # first label
+        
+        DT_seq = [[node[0], node[1]] if node[0] % 2 == 0 else [node[1], node[0]] for node in DT_seq]
+        DT_seq.sort(key = lambda node : node[0])
+        
+        # Return results
+            
+        if f_list:
+            return [DT_seq, f_list]
+        else:
+            return [DT_seq]
           
 #-----------------------------------------------------------------------------#
+
+# Choose number of nodes for final graph
+
+numNodes = 10
 
 # Initialize with Gauss code aa
 
 G = Graph()
 G.initEdges()
-
-numNodes = 50
 
 # Add additional nodes
 
@@ -794,5 +847,7 @@ for iii in range(2, numNodes + 1):
         
     else:
         G.insertSymbol(edge_left = edge1, edge_right = edge2, face_num = face)
+        
+# Print Gauss code for final graph
     
 print('Gauss code:', G)
