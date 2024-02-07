@@ -733,16 +733,22 @@ class Graph:
         
         return sum([iii * (iii + 1) // 2 for iii in self.edge_num_dict.values()])
         
-    def getEdgePair(self):
+    def getEdgePair(self, pair_num = None):
         """
-            Pick a random pair of (not necessarily distinct) edges to splice,
-            and return edges found
+            Return a pair of (not necessarily distinct) edges, and the face (with
+            sign to indicate rotation around the face). If a number is given,
+            return that number of pair of edges in list, if no number is specified,
+            a random pair of edges is returned.
         """
         
         # Determine which face to get edges from
         
         tot_num_pairs = sum([iii * (iii + 1) // 2 for iii in self.edge_num_dict.values()])
-        pair_num = randrange(tot_num_pairs)
+        
+        if type(pair_num) != int:
+            pair_num = randrange(tot_num_pairs)
+        elif pair_num >= tot_num_pairs:
+            return False
         
         for face_num in sorted(self.edge_num_dict):
             num_edges = self.edge_num_dict[face_num]
