@@ -12,6 +12,9 @@ from copy import deepcopy
 from gauss_code import Graph
 from Graphpoly import modOrbit
 
+from time import time
+start = time()
+
 # Choose number of nodes for final graph
 
 numNodes = 5
@@ -21,60 +24,80 @@ numNodes = 5
 G = Graph()
 G.initEdges()
 
-queue = [G]
-finalList = []
+currentDict = {G : 1}
 
 # Add additional nodes
 
-while len(queue) > 0:
+for iii in range(2, numNodes + 1):
     
-    # Pull graph off of queue, and find all possible Gauss codes with one
-    # larger number of nodes
+    print('N =', iii)
     
-    currentGraph = queue.pop()
+    graphDict = {}
+    numDict = {}
     
-    numPairs = currentGraph.numPairs()
+    # Go through all current non-isomorphic graphs, and find all graphs with
+    # one greater node
 
-    for pairNum in range(numPairs):
-        nextGraph = deepcopy(currentGraph)
+    for currentGraph in currentDict.keys():
         
-        [edge1, edge2, face] = nextGraph.getEdgePair(pairNum)
-        
-        if edge1 == edge2:
-            nextGraph.insertSelfLoop(edge_first = edge1, face_num = face)
+        numPairs = currentGraph.numPairs()
+    
+        for pairNum in range(numPairs):
+            nextGraph = deepcopy(currentGraph)
             
-        else:
-            nextGraph.insertSymbol(edge_left = edge1, edge_right = edge2, face_num = face)
-        
-        # Depending on number of nodes, add to queue or final graph
-        
-        if nextGraph.num_nodes == numNodes:
-            finalList += [nextGraph]
-        else:
-            queue += [nextGraph]
+            [edge1, edge2, face] = nextGraph.getEdgePair(pairNum)
+            nextGraph.addEdgePair(pairNum)
             
+            if edge1 == edge2:
+                nextGraph.insertSelfLoop(edge_first = edge1, face_num = face)
+                
+            else:
+                nextGraph.insertSymbol(edge_left = edge1, edge_right = edge2, face_num = face)
+            
+            # Add next graph to dicts only if it has a distinct lowest order
+            # Gauss code; be sure to include multiplicity of previous graph
+            
+            lowest = nextGraph.lowestCode()
+            
+            if lowest not in graphDict.keys():
+                graphDict[lowest] = nextGraph
+                numDict[lowest] = currentDict[currentGraph]
+            else:
+                numDict[lowest] += currentDict[currentGraph]
+            
+    # Move all graphs to currentList, with correct multiplicity
+            
+    currentDict = {}
+    
+    for code in graphDict.keys():
+        currentDict[graphDict[code]] = numDict[code]
+        
 # Find multiplicity of each resulting graph, using the DT sequence for each graph
 
 multDict = {}
+pairListDict = {}
 
-for graph in finalList:
+for graph in currentDict.keys():
     DTseq = modOrbit(graph.GaussToDT(f_list = False)[0], crossing = False)
     DTstring = ' '.join([repr(node[1]) for node in DTseq])
 
-    multDict[DTstring] = multDict.get(DTstring, 0) + 1
+    multDict[DTstring] = multDict.get(DTstring, 0) + currentDict[graph]
+    pairListDict[DTstring] = graph.edge_pair_list
     
 # Sort as numbers, not as strings (which was necessary to use for dict)
 
 seqList = []
 
 for key in multDict.keys():
-    seqList += [(key, [int(label) for label in key.split(' ')])]
+    seqList += [(key, [int(label) for label in key.split(' ')], pairListDict[key])]
     
 seqList.sort(key = lambda seq : seq[1])
 
-for ting in seqList:
-    print(ting[0], multDict[ting[0]])
+for seq in seqList:
+    print(seq[0], multDict[seq[0]], seq[2])
     
 print('num of nodes:', numNodes)
 print('num of non-iso seqs:', len(multDict))
-print('num of graphs:', len(finalList))
+print('num of graphs:', sum(currentDict.values()))
+    
+print('time:', time() - start)
