@@ -6,6 +6,9 @@ Created on Wed Feb  7 08:33:32 2024
 
 This program creates all Gauss codes with a given number of nodes, and finds
 the multiplicity of each isomorphic set of graphs.
+
+09 Feb 2024: Added part to write to file the multiplicity and edge pair list
+for each non-isomorphic Gauss code.
 """
 
 from copy import deepcopy
@@ -46,7 +49,6 @@ for iii in range(2, numNodes + 1):
             nextGraph = deepcopy(currentGraph)
             
             [edge1, edge2, face] = nextGraph.getEdgePair(pairNum)
-            nextGraph.addEdgePair(pairNum)
             
             if edge1 == edge2:
                 nextGraph.insertSelfLoop(edge_first = edge1, face_num = face)
@@ -72,6 +74,23 @@ for iii in range(2, numNodes + 1):
     for code in graphDict.keys():
         currentDict[graphDict[code]] = numDict[code]
         
+print('---')
+        
+# For desired number of nodes, print out all Gauss codes, multiplicities, and
+# edge pair number lists
+
+edgePairList = [(numDict[code], graphDict[code].edge_pair_list) for code in graphDict.keys()]
+edgePairList.sort(key = lambda pair : pair[1])
+
+with open('edgePairList N = {}.txt'.format(numNodes), 'w') as f:
+    
+    for item in edgePairList:
+        f.write(repr(item) + '\n')
+        
+f.close()
+
+print('num of distinct Gauss codes:', len(graphDict.keys()), '\n---')
+        
 # Find multiplicity of each resulting graph, using the DT sequence for each graph
 
 multDict = {}
@@ -94,7 +113,7 @@ for key in multDict.keys():
 seqList.sort(key = lambda seq : seq[1])
 
 for seq in seqList:
-    print(seq[0], multDict[seq[0]], seq[2])
+    print('{0} \t {1:5d} \t {2}'.format(seq[0], multDict[seq[0]], seq[2]))
     
 print('num of nodes:', numNodes)
 print('num of non-iso seqs:', len(multDict))

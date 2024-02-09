@@ -752,6 +752,8 @@ class Graph:
         elif pair_num >= tot_num_pairs:
             return False
         
+        self.edge_pair_list += [pair_num]       # Add edge pair to list
+        
         for face_num in sorted(self.edge_num_dict):
             num_edges = self.edge_num_dict[face_num]
             num_pairs = num_edges * (num_edges + 1) // 2
@@ -771,9 +773,6 @@ class Graph:
             pair_num -= (num_edges - iii)
             
         return [self.face_dict[face_num][iii], self.face_dict[face_num][iii + jjj], face_num]
-    
-    def addEdgePair(self, pair_num = -1):
-        self.edge_pair_list += [pair_num]
     
     def allEdgePairs(self):
         """
