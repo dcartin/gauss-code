@@ -33,7 +33,7 @@ Notation:
     
 """
 
-from itertools import combinations_with_replacement
+from itertools import combinations_with_replacement, permutations
 from random import randrange
 
 #-----------------------------------------------------------------------------#
@@ -75,9 +75,6 @@ class Symbol:
         
         self.label = -self.label
         self.chord.label = -self.chord.label
-        
-    def chord(self):
-        return self.chord
 
 #-----------------------------------------------------------------------------#
         
@@ -162,6 +159,11 @@ class Graph:
         # face in CW order
         
         self.face_edge_dict = {}
+        
+        # Create a list of edge pair numbers used to reach this graph from the
+        # primitive graph aa
+        
+        self.edge_pair_list = []
         
     def __repr__(self):
         
@@ -770,6 +772,9 @@ class Graph:
             
         return [self.face_dict[face_num][iii], self.face_dict[face_num][iii + jjj], face_num]
     
+    def addEdgePair(self, pair_num = -1):
+        self.edge_pair_list += [pair_num]
+    
     def allEdgePairs(self):
         """
             Creates an iterator which yields (edge_1, edge_2, face) for all
@@ -830,5 +835,72 @@ class Graph:
             return [DT_seq, f_list]
         else:
             return [DT_seq]
+            
+    def lowestCode(self):
+        """
+            For the graph, find the Gauss code with the lowest order. NOTE:
+            This currently only works well for nine or less nodes, since in
+            Python, '10...' < '2...'
+        """
+        
+        symbol_list = []
+        self_num_list = []
+        
+        try:
+            current = self.head.next
+            
+            while current.next:
+                
+                self_num_list.append(current.first.label)
+                second_num = current.last.label
+                
+                symbol_list.append(repr(current.first))
+                second_symb = repr(current.last)
+                
+                current = current.next
+                
+            self_num_list.append(second_num)
+            symbol_list.append(second_symb)
+            
+            # Create current string
+            
+            max_string = ''.join(symbol_list)
+            
+            for perm in permutations(range(1, self.num_nodes + 1)):
+                
+                # Try code in given order
+                
+                new_num_list = []
+                
+                for num in self_num_list:
+                    if num > 0:
+                        new_num_list += [str(perm[num - 1]) + '+']
+                    else:
+                        new_num_list += [str(perm[-num - 1]) + '-']
+                        
+                new_string = ''.join(new_num_list)
+                
+                if new_string < max_string:
+                    max_string = new_string
+                    
+                # Try code in reversed order
+                
+                new_num_list = []
+                
+                for num in [self_num_list[iii] for iii in range(len(self_num_list) - 1, -1, -1)]:
+                    if num > 0:
+                        new_num_list += [str(perm[num - 1]) + '+']
+                    else:
+                        new_num_list += [str(perm[-num - 1]) + '-']
+                        
+                new_string = ''.join(new_num_list)
+                
+                if new_string < max_string:
+                    max_string = new_string
+            
+        except:
+            return ''
+        
+        return max_string
           
 #-----------------------------------------------------------------------------#
