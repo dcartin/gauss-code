@@ -12,7 +12,7 @@ from gauss_code import Graph
 
 # Choose number of nodes for final graph
 
-numNodes = 10
+numNodes = 4
 
 # Initialize with Gauss code aa
 
@@ -33,4 +33,5 @@ for iii in range(2, numNodes + 1):
         
 # Print Gauss code for final graph
     
-print('Gauss code:', G)
+print('Gauss code:', G.lowestCode())
+print('edge pair seq:', G.edge_pair_list)
