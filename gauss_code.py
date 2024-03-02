@@ -867,31 +867,37 @@ class Graph:
             
             for perm in permutations(range(1, self.num_nodes + 1)):
                 
-                # Try code in given order
+                # Try code in given order, ensuring 1+ starts final string
                 
                 new_num_list = []
                 
                 for num in self_num_list:
                     if num > 0:
                         new_num_list += [str(perm[num - 1]) + '+']
+                        if perm[num - 1] == 1:
+                            index = len(new_num_list) - 1       # Remember location of 1+
                     else:
                         new_num_list += [str(perm[-num - 1]) + '-']
                         
+                new_num_list = new_num_list[index:] + new_num_list[:index]
                 new_string = ''.join(new_num_list)
                 
                 if new_string < max_string:
                     max_string = new_string
                     
-                # Try code in reversed order
+                # Try code in reversed order, again with 1+ starting string
                 
                 new_num_list = []
                 
                 for num in [self_num_list[iii] for iii in range(len(self_num_list) - 1, -1, -1)]:
                     if num > 0:
                         new_num_list += [str(perm[num - 1]) + '+']
+                        if perm[num - 1] == 1:
+                            index = len(new_num_list) - 1       # Remember location of 1+
                     else:
                         new_num_list += [str(perm[-num - 1]) + '-']
                         
+                new_num_list = new_num_list[index:] + new_num_list[:index]
                 new_string = ''.join(new_num_list)
                 
                 if new_string < max_string:

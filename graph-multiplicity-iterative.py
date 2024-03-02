@@ -22,7 +22,7 @@ start = time()
 
 # Open file with multiplicities and edge pair lists for one lower number of nodes
 
-numNodes = 4            # Number of nodes to *read in*, not create
+numNodes = 6           # Number of nodes to *read in*, not create
 edgePairList = []
 
 with open('edgePairList N = {}.txt'.format(numNodes), 'r') as f:
@@ -39,7 +39,7 @@ graphDict = {}
 numDict = {}
 
 for (seedNum, (mult, seedList)) in enumerate(edgePairList):
-    print('pair num:', seedNum)
+    # print('pair num:', seedNum)
 
     # Initialize with Gauss code aa
     
@@ -83,15 +83,9 @@ for (seedNum, (mult, seedList)) in enumerate(edgePairList):
         else:
             numDict[lowest] += mult
         
-    # Move all graphs to currentList, with correct multiplicity
-            
-    currentDict = {}
-    
-    for code in graphDict.keys():
-        currentDict[graphDict[code]] = numDict[code]
-        
 # For desired number of nodes, print to file all multiplicities and edge pair
-# number lists, for each non-isomorphic orientation-signed Gauss code
+# number lists, for each non-isomorphic orientation-signed Gauss code; sort
+# entries by the edge pair number lists
 
 edgePairList = [(numDict[code], graphDict[code].edge_pair_list) for code in graphDict.keys()]
 edgePairList.sort(key = lambda pair : pair[1])
@@ -107,14 +101,16 @@ f.close()
 multDict = {}
 pairListDict = {}
 
-for graph in currentDict.keys():
+for (code, graph) in graphDict.items():
+    
     DTseq = modOrbit(graph.GaussToDT(f_list = False)[0], crossing = False)
     DTstring = ' '.join([repr(node[1]) for node in DTseq])
 
-    multDict[DTstring] = multDict.get(DTstring, 0) + currentDict[graph]
+    multDict[DTstring] = multDict.get(DTstring, 0) + numDict[code]
     pairListDict[DTstring] = graph.edge_pair_list
     
-# Sort as numbers, not as strings (which was necessary to use for dict)
+# Sort as numbers, not as strings (which was necessary to use for dict), then
+# print to screen DT sequence, multiplicity, and edge pair number list for graph
 
 seqList = []
 
@@ -128,6 +124,6 @@ for seq in seqList:
     
 print('num of nodes:', numNodes)
 print('num of non-iso seqs:', len(multDict))
-print('num of graphs:', sum(currentDict.values()))
+print('num of graphs:', sum(numDict.values()))
     
 print('time:', time() - start)
