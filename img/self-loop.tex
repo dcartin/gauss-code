@@ -1,0 +1,40 @@
+\documentclass[crop, tikz]{standalone}
+\makeatletter
+
+\begin{document}
+
+\begin{tikzpicture}[> = latex, font = \tiny]
+
+\def\Q{20}
+
+\matrix[column sep = 0.5 cm]{
+
+	\draw [->] (-0.5, 0) -- node [above] {$e_1$} (0.5, 0);
+	
+	\fill (-0.5, 0) circle (1 pt) node [below] {$a$};
+	\fill (0.5, 0) circle (1 pt) node [below] {$b$};
+	
+	&
+	
+	\draw [->] (0, 0) -- node [above] {splice} (1, 0);
+	
+	&
+	
+	\begin{scope}[yshift = -0.5 cm]
+	
+		\draw [->] (-1, 0) -- node [pos = 0.33, above] {$e_1$} (0, 0);
+		\draw [->] (0, 0) to [out = 45, in = 0] (0, 1) node [above] {$e_3$} to [out = 180, in = 135] (0, 0);
+		\draw [->] (0, 0) -- node [pos = 0.67, above] {$e_2$} (1, 0);
+	
+		\fill (-1, 0) circle (1 pt) node [below] {$a$};
+		\fill (0, 0) circle (1 pt) node [below] {$c$};
+		\fill (1, 0) circle (1 pt) node [below] {$b$};
+	
+	\end{scope}
+
+	\\
+};
+
+\end{tikzpicture}
+
+\end{document}

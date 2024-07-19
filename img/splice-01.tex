@@ -1,0 +1,31 @@
+\documentclass[crop, tikz]{standalone}
+\makeatletter
+
+\begin{document}
+
+\begin{tikzpicture}[> = latex, font = \tiny]
+
+\def\Q{20}
+
+\matrix[column sep = 0.5 cm]{
+
+	\draw [rounded corners, ->] (0, -0.5) -- (0, 0) -- (0.5, 0);
+	\draw [rounded corners, ->] (0, 0.5) -- (0, 0) -- (-0.5, 0);
+	
+	&
+	
+	\draw [->] (0, 0) -- node [above] {splice} (1, 0);
+	
+	&
+	
+	\draw (-0.5, 0) -- (0.5, 0);
+	\draw (0, -0.5) -- (0, 0.5);
+	
+	\fill (0, 0) circle (1 pt) node [above right] {$a$};
+
+	\\
+};
+
+\end{tikzpicture}
+
+\end{document}

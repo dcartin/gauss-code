@@ -1,0 +1,21 @@
+\documentclass[crop, tikz]{standalone}
+\makeatletter
+
+\begin{document}
+
+\begin{tikzpicture}[> = latex, font = \tiny]
+
+	\def\L{0.625}
+	\useasboundingbox (-\L, -\L) rectangle (\L, \L);
+
+	\draw [->] (225 : 0.5) -- (45 : 0.5);
+	\draw [->] (315 : 0.5) -- (135 : 0.5);
+	
+	\node at (45 : 0.6) {$+$};
+	\node at (135 : 0.6) {$-$};
+	
+	\fill (0, 0) circle (1 pt) node [right] {$a$};
+
+\end{tikzpicture}
+
+\end{document}
